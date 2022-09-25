@@ -4,6 +4,8 @@ from sklearn import datasets, svm, metrics
 from sklearn.model_selection import train_test_split
 from skimage.transform import resize
 
+import numpy as np
+
 def preprocess_data(dataset):
     n_samples = len(dataset.images)
     data = dataset.images.reshape((n_samples, -1))
@@ -35,6 +37,12 @@ def hyperparameter_tuning(X_train, y_train, X_test, y_test, X_dev, y_dev, hyper_
     best_accuracy = -1
     best_hyper_params = None
 
+    train_acc_list = []
+    val_acc_list = []
+    test_acc_list = []
+
+    print("Step 3")
+
     print ("{:<27} {:<27} {:<27} {:<27}".format('Hyperparameters','Training Accuracy','Validation Accuracy','Testing Accuracy'))
     print("")
 
@@ -58,11 +66,29 @@ def hyperparameter_tuning(X_train, y_train, X_test, y_test, X_dev, y_dev, hyper_
         predicted = clf.predict(X_train)
         training_accuracy = metric(y_pred = predicted, y_true = y_train)
 
+        train_acc_list.append(training_accuracy)
+        test_acc_list.append(testing_accuracy)
+        val_acc_list.append(validation_accuracy)
+
         if validation_accuracy > best_accuracy:
             best_accuracy = validation_accuracy
             best_model = clf
             best_hyper_params = comb
 
         print ("{:<27} {:<27} {:<27} {:<27}".format(str("gamma = " + str(comb["gamma"]) + ", C = " + str(comb["C"])), training_accuracy, validation_accuracy, testing_accuracy ))
+    
+    train_acc_list = np.asarray(train_acc_list)
+    test_acc_list = np.asarray(test_acc_list)
+    val_acc_list = np.asarray(val_acc_list)
+
+    print("\nStep 4")
+
+    print ("{:<27} {:<27} {:<27} {:<27}".format('','Training Accuracy','Validation Accuracy','Testing Accuracy'))
+    print("")
+
+    print ("{:<27} {:<27} {:<27} {:<27}".format('Minimum', np.amin(train_acc_list), np.amin(val_acc_list), np.amin(test_acc_list)))
+    print ("{:<27} {:<27} {:<27} {:<27}".format('Maximum', np.amax(train_acc_list), np.amax(val_acc_list), np.amax(test_acc_list)))
+    print ("{:<27} {:<27} {:<27} {:<27}".format('Mean', np.mean(train_acc_list), np.mean(val_acc_list), np.mean(test_acc_list)))
+    print ("{:<27} {:<27} {:<27} {:<27}".format('Median', np.median(train_acc_list), np.median(val_acc_list), np.median(test_acc_list)))
     
     return (best_model, best_accuracy, best_hyper_params)

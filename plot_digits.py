@@ -7,13 +7,15 @@ from sklearn import datasets, svm, metrics
 from util import *
 
 gamma_list = [0.01, 0.005, 0.001, 0.0005, 0.0001]
-c_list = [0.1, 0.2, 0.5, 0.7, 1, 2, 5, 7, 10]
+c_list = [0.1, 0.2, 0.5, 1, 2]
 
 hyper_comb = [{ 'gamma': gamma, 'C': c } for gamma in gamma_list for c in c_list]
 
-train_frac = 0.8
+train_frac = 0.7
 test_frac = 0.1
-dev_frac = 0.1
+dev_frac = 0.2
+
+print("Train : Val : Test = ", (train_frac, dev_frac, test_frac))
 
 digits = datasets.load_digits()
 
@@ -46,6 +48,8 @@ metric = metrics.accuracy_score
 (best_model, best_accuracy, best_hyper_params) = hyperparameter_tuning(X_train, y_train, X_test, y_test, X_dev, y_dev, hyper_comb, metric)
 
 predicted = best_model.predict(X_test)
+
+print("\nStep 5")
 
 print("\nBest Hyperparameters obtained : ", best_hyper_params)
 
