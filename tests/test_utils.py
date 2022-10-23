@@ -55,6 +55,68 @@ def test_tune_and_save():
     assert os.path.exists(actual_model_path)
     assert type(load(actual_model_path)) == type(clf)
 
+def helper_create_multi_class_data(n=100, d=7, n_labels = 5):
+    x_train = np.random.randn(n, d)
+    y_train = np.zeros(5*n)
+
+    for i in range(n_labels)[1:]:
+        temp = 1.5 + np.random.randn(n, d)
+
+        x_train = np.vstack((x_train, temp))
+        y_train[i*n:(i+1)*n] = i
+
+    return x_train, y_train
+
+def test_step_3():
+    n_labels = 5
+    x_train, y_train = helper_create_multi_class_data(n_labels = n_labels)
+    x_test, y_test = helper_create_multi_class_data(n = 30, n_labels = n_labels)
+
+    clf = svm.SVC()
+
+    # Training on dummy data
+    clf.fit(x_train, y_train)
+
+    # Getting predictions on dummy test data
+    pred = clf.predict(x_test)
+
+    flag = False
+    x = pred[0]
+
+    # Checking if all the predicted labels are equal to the first predicted label, in that case flag will remain false and test will fail
+    for i in pred[1:]:
+        if i!=x:
+            flag = True
+
+    assert flag
+
+def test_step_4():
+
+    n_labels = 5
+    x_train, y_train = helper_create_multi_class_data(n_labels = n_labels)
+    x_test, y_test = helper_create_multi_class_data(n = 30, n_labels = n_labels)
+
+    clf = svm.SVC()
+
+    # Training on dummy data
+    clf.fit(x_train, y_train)
+
+    # Getting predictions on dummy test data
+    pred = clf.predict(x_test)
+
+    # map to store whether a label has occured or not in the predictions
+    d = {}
+    for i in range(n_labels):
+        d[i] = False
+
+    # Making the label's value as true
+    for i in pred:
+        d[i] = True
+
+    # Checking if each label's value if true which means it has occured in the prediction at least once
+    for i in range(n_labels):
+        assert d[i]
+
 # what more test cases should be there
 # irrespective of the changes to the refactored code.
 
