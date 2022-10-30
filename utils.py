@@ -1,11 +1,26 @@
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from joblib import dump
-from sklearn import svm
+from sklearn import svm,tree
+from sklearn.metrics import f1_score
+
+def get_all_combs(param_vals, param_name, combs_so_far):
+    new_combs_so_far = []        
+    for c in combs_so_far:        
+        for v in param_vals:
+            cc = c.copy()
+            cc[param_name] = v
+            new_combs_so_far.append(cc)
+    return new_combs_so_far
 
 
 def get_all_h_param_comb(params):
-    h_param_comb = [{"gamma": g, "C": c} for g in params['gamma'] for c in params['C']]
+    h_param_comb = [{}]
+    for p_name in params:
+        h_param_comb = get_all_combs(
+            param_vals=params[p_name], param_name=p_name, combs_so_far=h_param_comb
+        )
+
     return h_param_comb
     
 def preprocess_digits(dataset):
@@ -98,8 +113,13 @@ def tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, mod
     # save the best_model
     best_param_config = "_".join([h + "=" + str(best_h_params[h]) for h in best_h_params])
     
+    model_type = ""
+
     if type(clf) == svm.SVC:
-        model_type = 'svm' 
+        model_type = "svm"
+
+    if type(clf) == tree.DecisionTreeClassifier:
+        model_type = "decision_tree"
 
     best_model_name = model_type + "_" + best_param_config + ".joblib"
     if model_path == None:
@@ -112,3 +132,6 @@ def tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, mod
     print("Best Metric on Dev was:{}".format(best_metric))
 
     return model_path
+
+def macro_f1(y_true, y_pred, pos_label=1):
+    return f1_score(y_true, y_pred, pos_label=pos_label, average='macro', zero_division='warn')
