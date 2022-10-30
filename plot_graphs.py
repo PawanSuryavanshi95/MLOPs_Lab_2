@@ -60,11 +60,19 @@ for model in model_types:
 metric_list = [metrics.accuracy_score, macro_f1]
 h_metric = metrics.accuracy_score
 
+labels = {
+    "test":[],
+    "svc":[],
+    "dtc":[],
+}
+
 for i in range(n_cv):
 
     x_train, y_train, x_dev, y_dev, x_test, y_test = train_dev_test_split(
         data, label, train_frac, dev_frac
     )
+
+    labels['test'] = y_test[:25]
 
     for model in model_types:
         clf = model_types[model]
@@ -77,6 +85,10 @@ for i in range(n_cv):
 
         predicted = best_model.predict(x_test)
 
+        labels[model] = predicted[:25]
+
+        print(predicted.shape)
+
         results[model].append({m.__name__:m(y_pred=predicted, y_true=y_test) for m in metric_list})
         
         # 4. report the test set accurancy with that best model.
@@ -84,6 +96,11 @@ for i in range(n_cv):
             f"Classification report for classifier {clf}:\n"
             f"{metrics.classification_report(y_test, predicted)}\n"
         )
+
+print("\nComparing Labels :")
+print("\nY_test : SVC Prediction : Decision Tree Prediction")
+for i in range(25):
+    print(labels["test"][i], labels["svc"][i],labels["dtc"][i])
 
 print("\nResults :-")
 for model in model_types:
