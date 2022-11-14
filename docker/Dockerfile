@@ -1,7 +1,19 @@
-#FROM ubuntu:latest
 FROM python:3.8.1
-COPY ./*.py /exp/
+
 COPY ./requirements.txt /exp/requirements.txt
+
 RUN pip3 install --no-cache-dir -r /exp/requirements.txt
+
+COPY ./api/*.py /exp/api/
+
+COPY ./svm_gamma=0.001_C=5.joblib /exp/
+
 WORKDIR /exp
-CMD ["python3", "./plot_graphs.py" ]
+
+EXPOSE 5000
+
+ENTRYPOINT ["python"]
+
+CMD ["./api/app.py"]
+
+#ENTRYPOINT ["python", "./api/app.py" ]
