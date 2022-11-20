@@ -1,19 +1,16 @@
-FROM python:3.8.1
-
+FROM python:3.9
+WORKDIR /exp
 COPY ./requirements.txt /exp/requirements.txt
-
 RUN pip3 install --no-cache-dir -r /exp/requirements.txt
 
+COPY ./*.py /exp/
+
+#COPY ./*.sh /exp/
+
 COPY ./api/*.py /exp/api/
+COPY ./models/* /exp/models/
+COPY ./results/* /exp/results/
 
-COPY ./svm_gamma=0.001_C=5.joblib /exp/
+#ENTRYPOINT ["python", "-m", "plot_graphs"]
 
-WORKDIR /exp
-
-EXPOSE 5000
-
-ENTRYPOINT ["python"]
-
-CMD ["./api/app.py"]
-
-#ENTRYPOINT ["python", "./api/app.py" ]
+ENTRYPOINT ["python", "./api/app.py" ]

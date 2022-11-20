@@ -94,6 +94,8 @@ txt_content = f"""test accuracy: {test_acc}
 test macro-f1: {test_f1} 
 model saved at ./{actual_model_path}"""
 
+if not os.path.exists('results'):
+    os.mkdir('results')
 
 with open('results/' + txt_file_name, 'w') as f:
     f.write(txt_content)
