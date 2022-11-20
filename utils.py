@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from joblib import dump
 from sklearn import svm
+import os
 
 
 def get_all_h_param_comb(params):
@@ -44,14 +45,14 @@ def pred_image_viz(x_test, predictions):
 # dev to set hyperparameters of the model
 # test to evaluate the performance of the model
 
-def train_dev_test_split(data, label, train_frac, dev_frac):
+def train_dev_test_split(data, label, train_frac, dev_frac, seed):
 
     dev_test_frac = 1 - train_frac
     x_train, x_dev_test, y_train, y_dev_test = train_test_split(
-        data, label, test_size=dev_test_frac, shuffle=True
+        data, label, test_size=dev_test_frac, shuffle=True, random_state = seed
     )
     x_test, x_dev, y_test, y_dev = train_test_split(
-        x_dev_test, y_dev_test, test_size=(dev_frac) / dev_test_frac, shuffle=True
+        x_dev_test, y_dev_test, test_size=(dev_frac) / dev_test_frac, shuffle=True, random_state = seed
     )
 
     return x_train, y_train, x_dev, y_dev, x_test, y_test
@@ -90,7 +91,8 @@ def h_param_tuning(h_param_comb, clf, x_train, y_train, x_dev, y_dev, metric):
     return best_model, best_metric, best_h_params
 
 
-def tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, model_path):
+def tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, seed, model_path):
+
     best_model, best_metric, best_h_params = h_param_tuning(
         h_param_comb, clf, x_train, y_train, x_dev, y_dev, metric
     )
@@ -102,8 +104,12 @@ def tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, mod
         model_type = 'svm' 
 
     best_model_name = model_type + "_" + best_param_config + ".joblib"
+
+    if not os.path.exists('models'):
+        os.mkdir('models')
+
     if model_path == None:
-        model_path = best_model_name
+        model_path = 'models/' + best_model_name
     dump(best_model, model_path)
 
     print("Best hyperparameters were:")

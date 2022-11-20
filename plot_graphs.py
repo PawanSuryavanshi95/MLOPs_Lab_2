@@ -1,12 +1,8 @@
-# Author: Gael Varoquaux <gael dot varoquaux at normalesup dot org>
-# License: BSD 3 clause
-
-
-# PART: library dependencies -- sklear, torch, tensorflow, numpy, transformers
-
 # Import datasets, classifiers and performance metrics
 from sklearn import datasets, svm, metrics
+from sklearn.tree import DecisionTreeClassifier
 import pdb
+from sklearn.metrics import f1_score, accuracy_score
 
 from utils import (
     preprocess_digits,
@@ -18,6 +14,17 @@ from utils import (
     tune_and_save,
 )
 from joblib import dump, load
+
+import argparse, os
+
+parser = argparse.ArgumentParser(description ='Enter classifier name and random seed value')
+  
+# Adding Arguments
+parser.add_argument('--clf_name')
+parser.add_argument('--random_state')
+
+args = parser.parse_args()
+print(args.clf_name, args.random_state)
 
 train_frac, dev_frac, test_frac = 0.8, 0.1, 0.1
 assert train_frac + dev_frac + test_frac == 1.0
@@ -40,22 +47,28 @@ data, label = preprocess_digits(digits)
 # housekeeping
 del digits
 
+seed = int(args.random_state)
 
 x_train, y_train, x_dev, y_dev, x_test, y_test = train_dev_test_split(
-    data, label, train_frac, dev_frac
+    data, label, train_frac, dev_frac, seed
 )
 
 # PART: Define the model
 # Create a classifier: a support vector classifier
-clf = svm.SVC()
+
+clf = None
+
+if(args.clf_name == 'svm'):
+    clf = svm.SVC()
+elif(args.clf_name == 'tree'):
+    clf = DecisionTreeClassifier()
+
 # define the evaluation metric
 metric = metrics.accuracy_score
 
-
 actual_model_path = tune_and_save(
-    clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, model_path=None
+    clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, seed, model_path=None
 )
-
 
 # 2. load the best_model
 best_model = load(actual_model_path)
@@ -64,11 +77,30 @@ best_model = load(actual_model_path)
 # Predict the value of the digit on the test subset
 predicted = best_model.predict(x_test)
 
+report = metrics.classification_report(y_test, predicted)
+
+test_acc = accuracy_score(y_test, predicted)
+test_f1 = f1_score(y_test, predicted, average='macro')
+
 pred_image_viz(x_test, predicted)
+
+model_type = actual_model_path.split("_")[0].split('/')[1]
+
+txt_file_name = model_type + '_' + str(seed) + '.txt'
+
+print(model_type, txt_file_name)
+
+txt_content = f"""test accuracy: {test_acc}
+test macro-f1: {test_f1} 
+model saved at ./{actual_model_path}"""
+
+
+with open('results/' + txt_file_name, 'w') as f:
+    f.write(txt_content)
 
 # 4. report the test set accurancy with that best model.
 # PART: Compute evaluation metrics
 print(
     f"Classification report for classifier {clf}:\n"
-    f"{metrics.classification_report(y_test, predicted)}\n"
+    f"{report}\n"
 )

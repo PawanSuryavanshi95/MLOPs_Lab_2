@@ -5,7 +5,7 @@ from joblib import load
 
 sys.path.append(".")
 
-from utils import get_all_h_param_comb, tune_and_save
+from utils import get_all_h_param_comb, tune_and_save, train_dev_test_split
 from sklearn import svm, metrics
 
 # test case to check if all the combinations of the hyper parameters are indeed getting created
@@ -49,44 +49,92 @@ def test_tune_and_save():
     metric = metrics.accuracy_score
     
     model_path = "test_run_model_path.joblib"
-    actual_model_path = tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, model_path)
+    actual_model_path = tune_and_save(clf, x_train, y_train, x_dev, y_dev, metric, h_param_comb, 7, model_path)
 
     assert actual_model_path == model_path
     assert os.path.exists(actual_model_path)
     assert type(load(actual_model_path)) == type(clf)
 
-# what more test cases should be there
-# irrespective of the changes to the refactored code.
 
-# train/dev/test split functionality : input 200 samples, fraction is 70:15:15, then op should have 140:30:30 samples in each set
+# Endsem Q1 part b
+def test_data_split_same_seed():
+
+    flag = True
+
+    train_frac, dev_frac, test_frac = 0.8, 0.1, 0.1
+
+    data, label = helper_create_bin_data(n=100, d=7)
+
+    # seeds are kept same
+    seed_1 = 1
+    seed_2 = 1
+
+    x_train_1, y_train_1, x_dev_1, y_dev_1, x_test_1, y_test_1 = train_dev_test_split(
+        data, label, train_frac, dev_frac, seed_1
+    )
+
+    x_train_2, y_train_2, x_dev_2, y_dev_2, x_test_2, y_test_2 = train_dev_test_split(
+        data, label, train_frac, dev_frac, seed_2
+    )
+
+    comp = x_train_1==x_train_2
+    flag = comp.all() & flag
+
+    comp = x_test_1==x_test_2
+    flag = comp.all() & flag
+
+    comp = x_dev_1==x_dev_2
+    flag = comp.all() & flag
+
+    comp = y_train_1==y_train_2
+    flag = comp.all() & flag
+
+    comp = y_test_1==y_test_2
+    flag = comp.all() & flag
+
+    comp = y_dev_1==y_dev_2
+    flag = comp.all() & flag
+
+    assert flag
 
 
-# preprocessing gives ouput that is consumable by model
+# Endsem Q1 part c
+def test_data_split_same_seed():
 
-# accuracy check. if acc(model) < threshold, then must not be pushed.
+    flag = True
 
-# hardware requirement test cases are difficult to write.
-# what is possible: (model size in execution) < max_memory_you_support
+    train_frac, dev_frac, test_frac = 0.8, 0.1, 0.1
 
-# latency: tik; model(input); tok == time passed < threshold
-# this is dependent on the execution environment (as close the actual prod/runtime environment)
+    data, label = helper_create_bin_data(n=100, d=7)
 
+    # seeds are kept same
+    seed_1 = 1
+    seed_2 = 2
 
-# model variance? --
-# bias vs variance in ML ?
-# std([model(train_1), model(train_2), ..., model(train_k)]) < threshold
+    x_train_1, y_train_1, x_dev_1, y_dev_1, x_test_1, y_test_1 = train_dev_test_split(
+        data, label, train_frac, dev_frac, seed_1
+    )
 
+    x_train_2, y_train_2, x_dev_2, y_dev_2, x_test_2, y_test_2 = train_dev_test_split(
+        data, label, train_frac, dev_frac, seed_2
+    )
 
-# Data set we can verify, if it as desired
-# dimensionality of the data --
+    comp = x_train_1==x_train_2
+    flag = comp.all() & flag
 
-# yo
+    comp = x_test_1==x_test_2
+    flag = comp.all() & flag
 
-# Verify output size, say if you want output in certain way
-# assert len(prediction_y) == len(test_y)
+    comp = x_dev_1==x_dev_2
+    flag = comp.all() & flag
 
-# model persistance?
-# train the model -- check perf -- write the model to disk
-# is the model loaded from the disk same as what we had written?
-# assert acc(loaded_model) == expected_acc
-# assert predictions (loaded_model) == expected_prediction
+    comp = y_train_1==y_train_2
+    flag = comp.all() & flag
+
+    comp = y_test_1==y_test_2
+    flag = comp.all() & flag
+
+    comp = y_dev_1==y_dev_2
+    flag = comp.all() & flag
+
+    assert not flag
